@@ -1,18 +1,56 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using System;
 
 public class Cards : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    [SerializeField] private Image frontImage;
+    [SerializeField] private GameObject front;
+    [SerializeField] private GameObject back;
+
+    public Sprite CardSprite { get; private set; }
+
+    private bool isRevealed = false;
+    private bool isMatched = false;
+
+    public event Action<Cards> OnCardRevealed;
+
+    public void Initialize(int id, Sprite sprite)
     {
-        
+        CardSprite = sprite;
+        frontImage.sprite = sprite;
+
+        Hide();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Reveal()
     {
-        
+        if (isRevealed || isMatched) return;
+
+        isRevealed = true;
+
+        front.SetActive(true);
+        back.SetActive(false);
+
+        OnCardRevealed?.Invoke(this);
+    }
+
+    public void Hide()
+    {
+        isRevealed = false;
+
+        front.SetActive(false);
+        back.SetActive(true);
+    }
+
+    public void SetMatched()
+    {
+        isMatched = true;
+    }
+
+    
+    public void OnClick()
+    {
+        Reveal();
     }
 }
