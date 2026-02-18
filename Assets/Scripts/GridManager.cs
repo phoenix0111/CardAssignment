@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 public class GridManager : MonoBehaviour
 {
+    [Header("References")]
+    [SerializeField] private GameManager gameManager;
+    [SerializeField] private UIShake shakeEffect;
+
     [Header("Grid Settings")]
     [SerializeField] private int rows = 4;
     [SerializeField] private int columns = 4;
@@ -15,33 +19,27 @@ public class GridManager : MonoBehaviour
     [SerializeField] private List<Sprite> cardSprites;
 
     private List<Cards> revealedCards = new List<Cards>();
+    private bool isChecking = false;
+
+
 
     private void Start()
     {
         SetupGrid(rows, columns);
     }
 
-    #region Grid Setup
+    // Grid Setup ---------------------
 
     public void SetupGrid(int newRows, int newColumns)
     {
         rows = newRows;
         columns = newColumns;
 
-        ClearGrid();
         CalculateCellSize();
         GenerateGrid();
     }
 
-    private void ClearGrid()
-    {
-        foreach (Transform child in transform)
-        {
-            Destroy(child.gameObject);
-        }
-
-        revealedCards.Clear();
-    }
+   
 
     private void CalculateCellSize()
     {
@@ -52,8 +50,8 @@ public class GridManager : MonoBehaviour
 
         float calculatedWidth = (totalWidth - (spacingX * (columns - 1))) / columns;
 
-        
-        float maxSize = 250f;                // It Limit maximum size                                                      
+
+        float maxSize = 150f;                // It Limits maximum size of the card                                                  
 
         float finalSize = Mathf.Min(calculatedWidth, maxSize);
 
@@ -62,14 +60,15 @@ public class GridManager : MonoBehaviour
         gridLayout.constraintCount = columns;
     }
 
+    public int GetTotalPairs()
+    {
+        return (rows * columns) / 2;
+    }
 
 
 
 
-
-    #endregion
-
-    #region Grid Generation
+    // Grid Generation ---------------------
 
     private void GenerateGrid()
     {
@@ -103,10 +102,10 @@ public class GridManager : MonoBehaviour
             finalSprites.Add(sprite);
         }
 
-   
+
         Shuffle(finalSprites);
 
-     
+
         for (int i = 0; i < totalCards; i++)
         {
             Cards card = Instantiate(cardPrefab, transform);
@@ -115,18 +114,21 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    #endregion
-
-    #region Matching Logic
+    // Matchig Logic ---------------------
 
     private void HandleCardRevealed(Cards card)
     {
+        if (isChecking) return;
+
         revealedCards.Add(card);
 
         if (revealedCards.Count >= 2)
         {
+            isChecking = true;
+                                
+            gameManager.OnMoveMade();                       // Count move when 2 cards flipped
+
             CheckMatch(revealedCards[0], revealedCards[1]);
-            revealedCards.RemoveRange(0, 2);
         }
     }
 
@@ -136,11 +138,24 @@ public class GridManager : MonoBehaviour
         {
             first.SetMatched();
             second.SetMatched();
-            Debug.Log("Match!");
+
+            gameManager.OnPairMatched();
+
+            revealedCards.Clear();
+            isChecking = false;
+
+            SetAllCardsInteractable(true);
+
+            StartCoroutine(DeactivateCards(first.gameObject, second.gameObject));
+
+
         }
         else
         {
+            SetAllCardsInteractable(false);
             StartCoroutine(HideCards(first, second));
+            shakeEffect.Shake(0.2f, 2f);             // Shake effect on cards mismatch
+
         }
     }
 
@@ -150,11 +165,36 @@ public class GridManager : MonoBehaviour
 
         first.Hide();
         second.Hide();
+
+        revealedCards.Clear();
+        isChecking = false;
+        SetAllCardsInteractable(true);
+
     }
 
-    #endregion
+    private void SetAllCardsInteractable(bool value)
+    {
+        foreach (Transform child in transform)
+        {
+            Cards card = child.GetComponent<Cards>();
+            if (card != null)
+                card.SetInteractable(value);
+        }
+    }
 
-    #region Utility
+    private IEnumerator DeactivateCards(GameObject firstCard, GameObject secondCard)
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        firstCard.GetComponent<Button>().interactable = false;
+        secondCard.GetComponent<Button>().interactable = false;
+        firstCard.GetComponentInChildren<Image>().color = new Color(1f, 1f, 1f, 0f);              // fadng card effect for matched cards
+        secondCard.GetComponentInChildren<Image>().color = new Color(1f, 1f, 1f, 0f);                
+    }
+
+
+
+
 
     private void Shuffle<T>(List<T> list)
     {
@@ -167,5 +207,7 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    #endregion
+
+
+
 }

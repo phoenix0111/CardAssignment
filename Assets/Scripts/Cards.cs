@@ -4,16 +4,19 @@ using System;
 
 public class Cards : MonoBehaviour
 {
+    public Sprite CardSprite { get; private set; }
+
+    [Header("Card Details")]
     [SerializeField] private Image frontImage;
     [SerializeField] private GameObject front;
     [SerializeField] private GameObject back;
-
-    public Sprite CardSprite { get; private set; }
 
     private bool isRevealed = false;
     private bool isMatched = false;
 
     public event Action<Cards> OnCardRevealed;
+    private bool canInteract = true;
+
 
     public void Initialize(int id, Sprite sprite)
     {
@@ -48,9 +51,15 @@ public class Cards : MonoBehaviour
         isMatched = true;
     }
 
-    
+    public void SetInteractable(bool value)
+    {
+        canInteract = value;
+    }
+
     public void OnClick()
     {
+        if (!canInteract) return;
+
         Reveal();
     }
 }
