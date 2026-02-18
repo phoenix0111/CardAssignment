@@ -1,12 +1,15 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
+using Unity.VisualScripting;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private GridManager gridManager;
     [SerializeField] private GameObject winPanel;
+    [SerializeField] private GameObject losePanel;
 
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI timerText;
@@ -20,6 +23,20 @@ public class GameManager : MonoBehaviour
     private float bestTime = 0f;
     public float totalTime = 60f;
     [SerializeField] private float timeRemaining = 0f;
+
+    [Header("Win Panel Text")]
+    [SerializeField] private TextMeshProUGUI playerTimeText;
+    [SerializeField] private TextMeshProUGUI bestTimeWinText;
+
+    [Header("Game Audio")]
+    [SerializeField] private AudioClip winSFX;
+    [SerializeField] private AudioClip loseSFX;
+
+    [Header("Combo System")]
+    [SerializeField] private TextMeshProUGUI comboText;
+    [SerializeField] private float comboResetDelay = 3f;
+    private int comboCount = 0;
+    private Coroutine comboCoroutine;
 
     private int matchedPairs = 0;
     private int totalPairs;
@@ -40,6 +57,15 @@ public class GameManager : MonoBehaviour
         totalPairs = gridManager.GetTotalPairs();
         UpdateUI();
         timeRemaining = totalTime;
+
+        // Ensuring scene starts fresh
+        winPanel.SetActive(false);
+        losePanel.SetActive(false);
+
+        isPlaying = true;
+        score = 0;
+        moves = 0;
+        matchedPairs = 0;
     }
 
     void Update()
@@ -51,34 +77,46 @@ public class GameManager : MonoBehaviour
             timeRemaining -= Time.deltaTime;
             timerText.text = "Time: " + Mathf.FloorToInt(timeRemaining);
         }
-        else
+        else                                                                            // if time is over ---- GAME OVER
         {
             timeRemaining = 0;
             timerText.text = "Time: 0";
             Debug.Log("Time's up!");
+
+            isPlaying = false;
+            losePanel.SetActive(true);
+            AudioInstance.Instance.audioSource.PlayOneShot(loseSFX);
         }
 
     }
 
-    // Called when a pair matches
+    
     public void OnPairMatched()
     {
         matchedPairs++;
-        score += scorePerPair;
+        comboCount++;
 
-        if (matchedPairs >= totalPairs)
+        if (comboCoroutine != null)                                 // if player makes a match before combo timer runs out, it stops the timer and resets it
+            StopCoroutine(comboCoroutine);
+
+        comboCoroutine = StartCoroutine(ResetComboAfterDelay());       // it starts combo timer again after each match
+
+
+        if (matchedPairs >= totalPairs)                          // checking matched pairs
         {
             isPlaying = false;
             CheckForBestTime();
             SaveBestTime();
             UpdateBestTimeUI();
-            winPanel.SetActive(true);
+            StartCoroutine(ShowWinPanel());
         }
 
         UpdateUI();
+        UpdateComboUI();
     }
 
-    // Called when player flips two cards
+
+    // When player flips 2 cards
     public void OnMoveMade()
     {
         moves++;
@@ -91,17 +129,7 @@ public class GameManager : MonoBehaviour
         movesText.text = "Moves: " + moves;
     }
 
-    //public void RestartGame()
-    //{
-    //    matchedPairs = 0;
-    //    score = 0;
-    //    moves = 0;
-    //    timer = 0f;
-    //    isPlaying = true;
-
-    //    winPanel.SetActive(false);
-
-    // SceneManager.LoadScene("MainMenu");
+   
 
     private void CheckForBestTime()
     {
@@ -146,4 +174,52 @@ public class GameManager : MonoBehaviour
         bestTimeText.text = "Best Time: " +"\n" + seconds + "sec";
     }
 
+    private IEnumerator ShowWinPanel()
+    {
+        yield return new WaitForSeconds(1f);
+
+        winPanel.SetActive(true);
+        AudioInstance.Instance.audioSource.PlayOneShot(winSFX);
+        isPlaying = false;
+        playerTimeText.text = "Your Time: " + Mathf.FloorToInt( totalTime - timeRemaining) + " sec";
+        bestTimeWinText.text = "Best Time: " + Mathf.FloorToInt(bestTime) + " sec";
+    }
+
+    private IEnumerator ResetComboAfterDelay()
+    {
+        yield return new WaitForSeconds(comboResetDelay);
+        comboCount = 0;
+        UpdateComboUI();
+    }
+
+    public void ResetCombo()
+    {
+        comboCount = 0;
+
+        if (comboCoroutine != null)
+            StopCoroutine(comboCoroutine);
+
+        UpdateComboUI();
+    }
+    private void UpdateComboUI()
+    {
+        if (comboText == null) return;
+
+        if (comboCount > 1)
+            comboText.text = "Combo x" + comboCount;
+        else
+            comboText.text = "";
+    }
+
+
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void MainMenu()
+    {
+        SceneManager.LoadScene("MainMenu");
+    }
+    
 }
