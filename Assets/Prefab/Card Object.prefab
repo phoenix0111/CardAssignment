@@ -120,6 +120,8 @@ MonoBehaviour:
   frontImage: {fileID: 2801444118198146528}
   front: {fileID: 3906925152781276933}
   back: {fileID: 3084592096243149561}
+  audioSource: {fileID: 0}
+  cardPickSFX: {fileID: 8300000, guid: 65ce1580b5696d24395850e0a6e2b009, type: 3}
 --- !u!1 &3084592096243149561
 GameObject:
   m_ObjectHideFlags: 0

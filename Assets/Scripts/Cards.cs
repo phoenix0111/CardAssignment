@@ -17,6 +17,7 @@ public class Cards : MonoBehaviour
     public event Action<Cards> OnCardRevealed;
     private bool canInteract = true;
 
+    public AudioClip cardPickSFX;
 
     public void Initialize(int id, Sprite sprite)
     {
@@ -59,7 +60,7 @@ public class Cards : MonoBehaviour
     public void OnClick()
     {
         if (!canInteract) return;
-
+        AudioInstance.Instance.audioSource.PlayOneShot(cardPickSFX);
         Reveal();
     }
 }

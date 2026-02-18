@@ -19,16 +19,14 @@ public class GameManager : MonoBehaviour
     private string bestTimeKey;
     private float bestTime = 0f;
     public float totalTime = 60f;
-    public float timeRemaining = 0f;
-
+    [SerializeField] private float timeRemaining = 0f;
 
     private int matchedPairs = 0;
     private int totalPairs;
 
     private int score = 0;
     private int moves = 0;
-
-    
+ 
     private bool isPlaying = true;
     public int scorePerPair = 1;
 
@@ -48,8 +46,17 @@ public class GameManager : MonoBehaviour
     {
         if (!isPlaying) return;
 
-        timeRemaining -= Time.deltaTime;
-        timerText.text = "Time: " + Mathf.FloorToInt(timeRemaining);
+        if (timeRemaining > 0)
+        {
+            timeRemaining -= Time.deltaTime;
+            timerText.text = "Time: " + Mathf.FloorToInt(timeRemaining);
+        }
+        else
+        {
+            timeRemaining = 0;
+            timerText.text = "Time: 0";
+            Debug.Log("Time's up!");
+        }
 
     }
 
@@ -125,7 +132,6 @@ public class GameManager : MonoBehaviour
     private void LoadBestTime()
     {
         bestTime = PlayerPrefs.GetFloat(bestTimeKey, 0f);
-
     }
 
     private void UpdateBestTimeUI()
@@ -136,10 +142,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-
         int seconds = Mathf.FloorToInt(bestTime);
-        
-
         bestTimeText.text = "Best Time: " +"\n" + seconds + "sec";
     }
 
