@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Best Time UI")]
     [SerializeField] private TextMeshProUGUI bestTimeText;
-    private const string BEST_TIME_KEY = "BestTime";
+    private string bestTimeKey;
     private float bestTime = 0f;
     public float totalTime = 60f;
     public float timeRemaining = 0f;
@@ -34,6 +34,8 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        bestTimeKey = "BestTime_" + SceneManager.GetActiveScene().name;
+
         LoadBestTime();
         UpdateBestTimeUI();
 
@@ -115,13 +117,15 @@ public class GameManager : MonoBehaviour
     private void SaveBestTime()
     {
 
-        PlayerPrefs.SetFloat(BEST_TIME_KEY, bestTime);
+        PlayerPrefs.SetFloat(bestTimeKey, bestTime);
+        Debug.Log("besttime Key: " + bestTimeKey + " saved with value: " + bestTime);
         PlayerPrefs.Save();
     }
 
     private void LoadBestTime()
     {
-        bestTime = PlayerPrefs.GetFloat(BEST_TIME_KEY, 0f);
+        bestTime = PlayerPrefs.GetFloat(bestTimeKey, 0f);
+
     }
 
     private void UpdateBestTimeUI()
