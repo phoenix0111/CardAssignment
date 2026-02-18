@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using System.Collections;
 
 public class Cards : MonoBehaviour
 {
@@ -10,6 +11,12 @@ public class Cards : MonoBehaviour
     [SerializeField] private Image frontImage;
     [SerializeField] private GameObject front;
     [SerializeField] private GameObject back;
+
+    [Header("Flip Animation")]
+    [SerializeField] private float flipDuration = 0.25f;
+
+    private bool isFlipping = false;
+
 
     private bool isRevealed = false;
     private bool isMatched = false;
@@ -29,23 +36,19 @@ public class Cards : MonoBehaviour
 
     public void Reveal()
     {
-        if (isRevealed || isMatched) return;
+        if (isRevealed || isMatched || isFlipping) return;
 
-        isRevealed = true;
-
-        front.SetActive(true);
-        back.SetActive(false);
-
-        OnCardRevealed?.Invoke(this);
+        StartCoroutine(Flip(true));
     }
+
 
     public void Hide()
     {
-        isRevealed = false;
+        if (isFlipping) return;
 
-        front.SetActive(false);
-        back.SetActive(true);
+        StartCoroutine(Flip(false));
     }
+
 
     public void SetMatched()
     {
@@ -63,4 +66,53 @@ public class Cards : MonoBehaviour
         AudioInstance.Instance.audioSource.PlayOneShot(cardPickSFX);
         Reveal();
     }
+
+    private IEnumerator Flip(bool showFront)
+    {
+        isFlipping = true;
+        canInteract = false;
+
+        float elapsed = 0f;
+        float halfDuration = flipDuration / 2f;
+
+        
+        while (elapsed < halfDuration)                                 // it rotates the card to 90 degree in y axis
+        {
+            float angle = Mathf.Lerp(0f, 90f, elapsed / halfDuration);
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+
+        
+        front.SetActive(showFront);
+        back.SetActive(!showFront);
+
+        if (showFront)
+            isRevealed = true;
+        else
+            isRevealed = false;
+
+        elapsed = 0f;
+
+                                                                          // flipping card back to 0 degree if showFront is false and to 180 degree if showFront is true
+        while (elapsed < halfDuration)
+        {
+            float angle = Mathf.Lerp(90f, 180f, elapsed / halfDuration);
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.rotation = Quaternion.Euler(0f, showFront ? 180f : 0f, 0f);
+
+        isFlipping = false;
+        canInteract = true;
+
+        if (showFront)
+            OnCardRevealed?.Invoke(this);
+    }
+
 }

@@ -12569,7 +12569,7 @@ MonoBehaviour:
   sparkleVFX: {fileID: 1309317752}
   sparkleVFX2: {fileID: 1612232192}
   rows: 2
-  columns: 2
+  columns: 3
   gridLayout: {fileID: 2092935067}
   cardPrefab: {fileID: 2395600311432242812, guid: 14126320a75ffae4b998b08fa5f15c82, type: 3}
   cardSprites:
@@ -12790,7 +12790,7 @@ MonoBehaviour:
   scoreText: {fileID: 1040674253}
   movesText: {fileID: 2102335135}
   bestTimeText: {fileID: 703331836}
-  totalTime: 10
+  totalTime: 20
   timeRemaining: 0
   playerTimeText: {fileID: 277193063}
   bestTimeWinText: {fileID: 162531218}
