@@ -5,6 +5,8 @@ using System.Collections;
 
 public class Cards : MonoBehaviour
 {
+#region variables
+
     public Sprite CardSprite { get; private set; }
 
     [Header("Card Details")]
@@ -17,14 +19,21 @@ public class Cards : MonoBehaviour
 
     private bool isFlipping = false;
 
-
     private bool isRevealed = false;
     private bool isMatched = false;
 
-    public event Action<Cards> OnCardRevealed;
     private bool canInteract = true;
 
     public AudioClip cardPickSFX;
+    private GridManager gridManager;
+
+#endregion
+
+
+    void Start()
+    {
+        gridManager = FindObjectOfType<GridManager>();
+    }
 
     public void Initialize(int id, Sprite sprite)
     {
@@ -38,7 +47,8 @@ public class Cards : MonoBehaviour
     {
         if (isRevealed || isMatched || isFlipping) return;
 
-        StartCoroutine(Flip(true));
+     
+         StartCoroutine(Flip(true));
     }
 
 
@@ -62,10 +72,17 @@ public class Cards : MonoBehaviour
 
     public void OnClick()
     {
-        if (!canInteract) return;
+        if (!canInteract || isRevealed || isMatched)
+            return;
+
+        if (!gridManager.TryRegisterCard(this))
+            return;
+
         AudioInstance.Instance.audioSource.PlayOneShot(cardPickSFX);
         Reveal();
     }
+
+
 
     private IEnumerator Flip(bool showFront)
     {
@@ -75,7 +92,7 @@ public class Cards : MonoBehaviour
         float elapsed = 0f;
         float halfDuration = flipDuration / 2f;
 
-        
+
         while (elapsed < halfDuration)                                 // it rotates the card to 90 degree in y axis
         {
             float angle = Mathf.Lerp(0f, 90f, elapsed / halfDuration);
@@ -86,7 +103,7 @@ public class Cards : MonoBehaviour
 
         transform.rotation = Quaternion.Euler(0f, 90f, 0f);
 
-        
+
         front.SetActive(showFront);
         back.SetActive(!showFront);
 
@@ -97,7 +114,7 @@ public class Cards : MonoBehaviour
 
         elapsed = 0f;
 
-                                                                          // flipping card back to 0 degree if showFront is false and to 180 degree if showFront is true
+        // flipping card back to 0 degree if showFront is false and to 180 degree if showFront is true
         while (elapsed < halfDuration)
         {
             float angle = Mathf.Lerp(90f, 180f, elapsed / halfDuration);
@@ -110,9 +127,6 @@ public class Cards : MonoBehaviour
 
         isFlipping = false;
         canInteract = true;
-
-        if (showFront)
-            OnCardRevealed?.Invoke(this);
     }
 
 }

@@ -5,12 +5,13 @@ using UnityEngine.UI;
 
 public class GridManager : MonoBehaviour
 {
+ #region variables
+
     [Header("References")]
     [SerializeField] private GameManager gameManager;
     [SerializeField] private UIShake shakeEffect;
     public ParticleSystem sparkleVFX;
     public ParticleSystem sparkleVFX2;
-   
 
 
     [Header("Grid Settings")]
@@ -23,13 +24,15 @@ public class GridManager : MonoBehaviour
     [SerializeField] private Cards cardPrefab;
     [SerializeField] private List<Sprite> cardSprites;
 
+
     [Header("Audio Clips")]
     [SerializeField] private AudioClip cardMatchSFX;
     [SerializeField] private AudioClip cardMismatchSFX;
 
-
     private List<Cards> revealedCards = new List<Cards>();
     private bool isChecking = false;
+
+#endregion
 
 
 
@@ -38,7 +41,7 @@ public class GridManager : MonoBehaviour
         SetupGrid(rows, columns);
     }
 
-    // Setting up grid ---------------------
+    // Setting up grid 
 
     public void SetupGrid(int newRows, int newColumns)
     {
@@ -68,7 +71,7 @@ public class GridManager : MonoBehaviour
         return (rows * columns) / 2;
     }
 
-    // Grid Generation ---------------------
+    // Grid Generation 
 
     private void GenerateGrid()
     {
@@ -110,30 +113,41 @@ public class GridManager : MonoBehaviour
         {
             Cards card = Instantiate(cardPrefab, transform);
             card.Initialize(i, finalSprites[i]);
-            card.OnCardRevealed += HandleCardRevealed;
+
         }
     }
 
-    // Card Matching Logic ---------------------
+    // Card Matching Logic 
 
-    private void HandleCardRevealed(Cards card)
+    public bool TryRegisterCard(Cards card)
     {
-        if (isChecking) return;
+        if (isChecking)
+            return false;
+
+        if (revealedCards.Count >= 2)
+            return false;
+
+        if (revealedCards.Contains(card))
+            return false;
 
         revealedCards.Add(card);
 
-        if (revealedCards.Count >= 2)
+        if (revealedCards.Count == 2)
         {
             isChecking = true;
+            StartCoroutine(CheckMatch(revealedCards[0], revealedCards[1]));
 
-            gameManager.OnMoveMade();                       // Count move when 2 cards flipped
-
-            CheckMatch(revealedCards[0], revealedCards[1]);
         }
+
+
+        return true;
     }
 
-    private void CheckMatch(Cards first, Cards second)
+    private IEnumerator CheckMatch(Cards first, Cards second)
     {
+        // Wait for flip animation to finish
+        yield return new WaitForSeconds(0.3f);
+
         if (first.CardSprite == second.CardSprite)
         {
             first.SetMatched();
@@ -141,33 +155,37 @@ public class GridManager : MonoBehaviour
 
             gameManager.OnPairMatched();
 
-            revealedCards.Clear();
-            isChecking = false;
-
-            SetAllCardsInteractable(true);
             AudioInstance.Instance.audioSource.PlayOneShot(cardMatchSFX);
-            sparkleVFX.transform.position = first.transform.position;        // Sparkle effect on cards match
+
+            sparkleVFX.transform.position = first.transform.position;
             sparkleVFX.Play();
+
             sparkleVFX2.transform.position = second.transform.position;
             sparkleVFX2.Play();
 
             StartCoroutine(DeactivateCards(first.gameObject, second.gameObject));
-
         }
         else
         {
             SetAllCardsInteractable(false);
             StartCoroutine(HideCards(first, second));
-     
+
+            yield return new WaitForSeconds(0.3f);
+
+
         }
+
+        revealedCards.Clear();
+        isChecking = false;
     }
+
 
     private IEnumerator HideCards(Cards first, Cards second)         // flipping back the cards if they are not matched 
     {
-        
+
         yield return new WaitForSeconds(0.6f);
 
-        shakeEffect.Shake(0.2f, 2f); // Shake effect on cards mismatch
+        shakeEffect.Shake(0.2f, 2f);                                 // Shake effect on cards mismatch
         AudioInstance.Instance.audioSource.PlayOneShot(cardMismatchSFX);
         first.Hide();
         second.Hide();
@@ -190,11 +208,11 @@ public class GridManager : MonoBehaviour
 
     private IEnumerator DeactivateCards(GameObject firstCard, GameObject secondCard)                   // fading card effect for matched cards 
     {
-               yield return new WaitForSeconds(0.7f);
-        
+        yield return new WaitForSeconds(0.7f);
+
         firstCard.GetComponent<Button>().interactable = false;
         secondCard.GetComponent<Button>().interactable = false;
-        firstCard.GetComponentInChildren<Image>().color = new Color(1f, 1f, 1f, 0f);             
+        firstCard.GetComponentInChildren<Image>().color = new Color(1f, 1f, 1f, 0f);
         secondCard.GetComponentInChildren<Image>().color = new Color(1f, 1f, 1f, 0f);
     }
 

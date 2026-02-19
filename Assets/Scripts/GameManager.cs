@@ -1,11 +1,12 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
-using Unity.VisualScripting;
 using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
+#region variables
+
     [Header("References")]
     [SerializeField] private GridManager gridManager;
     [SerializeField] private GameObject winPanel;
@@ -43,9 +44,13 @@ public class GameManager : MonoBehaviour
 
     private int score = 0;
     private int moves = 0;
- 
+
     private bool isPlaying = true;
     public int scorePerPair = 1;
+
+ #endregion
+
+
 
     void Start()
     {
@@ -81,7 +86,7 @@ public class GameManager : MonoBehaviour
         {
             timeRemaining = 0;
             timerText.text = "Time: 0";
-            Debug.Log("Time's up!");
+           // Debug.Log("Time's up!");
 
             isPlaying = false;
             losePanel.SetActive(true);
@@ -90,7 +95,7 @@ public class GameManager : MonoBehaviour
 
     }
 
-    
+
     public void OnPairMatched()
     {
         matchedPairs++;
@@ -129,15 +134,13 @@ public class GameManager : MonoBehaviour
         movesText.text = "Moves: " + moves;
     }
 
-   
-
     private void CheckForBestTime()
     {
-       float newTime;
+        float newTime;
 
         newTime = totalTime - timeRemaining;
 
-        if(bestTime>newTime) 
+        if (bestTime > newTime)
         {
             bestTime = newTime;
         }
@@ -146,14 +149,14 @@ public class GameManager : MonoBehaviour
             bestTime = newTime;
         }
 
-        Debug.Log("Best time " + bestTime);
+      //  Debug.Log("Best time " + bestTime);
     }
 
     private void SaveBestTime()
     {
 
         PlayerPrefs.SetFloat(bestTimeKey, bestTime);
-        Debug.Log("besttime Key: " + bestTimeKey + " saved with value: " + bestTime);
+      //  Debug.Log("besttime Key: " + bestTimeKey + " saved with value: " + bestTime);
         PlayerPrefs.Save();
     }
 
@@ -171,7 +174,7 @@ public class GameManager : MonoBehaviour
         }
 
         int seconds = Mathf.FloorToInt(bestTime);
-        bestTimeText.text = "Best Time: " +"\n" + seconds + "sec";
+        bestTimeText.text = "Best Time: " + "\n" + seconds + "sec";
     }
 
     private IEnumerator ShowWinPanel()
@@ -181,7 +184,7 @@ public class GameManager : MonoBehaviour
         winPanel.SetActive(true);
         AudioInstance.Instance.audioSource.PlayOneShot(winSFX);
         isPlaying = false;
-        playerTimeText.text = "Your Time: " + Mathf.FloorToInt( totalTime - timeRemaining) + " sec";
+        playerTimeText.text = "Your Time: " + Mathf.FloorToInt(totalTime - timeRemaining) + " sec";
         bestTimeWinText.text = "Best Time: " + Mathf.FloorToInt(bestTime) + " sec";
     }
 
@@ -221,5 +224,5 @@ public class GameManager : MonoBehaviour
     {
         SceneManager.LoadScene("MainMenu");
     }
-    
+
 }
